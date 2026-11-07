@@ -32,7 +32,7 @@ function getPreview(post) {
   return content.length > 220 ? `${content.slice(0, 220).trimEnd()}…` : content
 }
 
-function BlogPostCard({ post }) {
+function BlogPostCard({ post, onLike, likePending = false }) {
   if (!post || typeof post !== 'object' || Array.isArray(post)) {
     return null
   }
@@ -78,6 +78,18 @@ function BlogPostCard({ post }) {
             <div className="blog-card__content">{post.content}</div>
           </details>
         )}
+        <button
+          className={`blog-card__like${post.liked ? ' blog-card__like--active' : ''}`}
+          type="button"
+          onClick={onLike}
+          disabled={likePending || typeof post.slug !== 'string'}
+          aria-pressed={Boolean(post.liked)}
+          aria-label={`${post.liked ? 'Unlike' : 'Like'} ${post.title || 'this post'}; ${Number(post.likes_count) || 0} likes`}
+        >
+          <span aria-hidden="true">{post.liked ? '♥' : '♡'}</span>
+          {post.liked ? 'Liked' : 'Like'}
+          <span className="blog-card__like-count">{Number(post.likes_count) || 0}</span>
+        </button>
       </div>
     </article>
   )
