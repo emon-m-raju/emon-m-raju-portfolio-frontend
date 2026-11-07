@@ -185,11 +185,12 @@
   line-height: 1.5;
 }
 
-.owner-project-form .owner-profile-field input:focus,
-.owner-project-form .owner-profile-field select:focus,
-.owner-project-form .owner-profile-field textarea:focus {
+.owner-project-form .owner-profile-field input:focus-visible,
+.owner-project-form .owner-profile-field select:focus-visible,
+.owner-project-form .owner-profile-field textarea:focus-visible {
   border-color: var(--accent);
-  outline: 2px solid rgb(101 230 180 / 15%);
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
 }
 
 .owner-project-form .owner-profile-field input[aria-invalid='true'],

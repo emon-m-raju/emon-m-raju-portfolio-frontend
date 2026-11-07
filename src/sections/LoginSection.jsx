@@ -87,7 +87,13 @@ function LoginSection({ auth, onLoginSuccess, onLogout }) {
           </button>
         </div>
       ) : (
-        <form className="auth-form" onSubmit={handleSubmit} noValidate>
+        <form
+          aria-describedby={feedback ? 'login-feedback' : undefined}
+          aria-label="Owner sign in"
+          className="auth-form"
+          onSubmit={handleSubmit}
+          noValidate
+        >
           <label className="form-field" htmlFor="login-username">
             <span>Username</span>
             <input
@@ -97,6 +103,8 @@ function LoginSection({ auth, onLoginSuccess, onLogout }) {
               name="username"
               onChange={(event) => setUsername(event.target.value)}
               value={username}
+              aria-invalid={status === 'invalid' && !username.trim()}
+              aria-required="true"
               required
             />
           </label>
@@ -110,6 +118,8 @@ function LoginSection({ auth, onLoginSuccess, onLogout }) {
               onChange={(event) => setPassword(event.target.value)}
               type="password"
               value={password}
+              aria-invalid={status === 'invalid' && !password}
+              aria-required="true"
               required
             />
           </label>
@@ -122,6 +132,7 @@ function LoginSection({ auth, onLoginSuccess, onLogout }) {
       {feedback && (
         <p
           className={`form-feedback form-feedback--${status}`}
+          id="login-feedback"
           role={status === 'error' || status === 'invalid' ? 'alert' : 'status'}
           aria-live="polite"
         >

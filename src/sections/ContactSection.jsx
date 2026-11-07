@@ -97,7 +97,12 @@ function ContactSection() {
         id="contact-title"
         description="Send a message using the contact form."
       />
-      <form className="contact-form" onSubmit={handleSubmit} noValidate>
+      <form
+        aria-label="Send a contact message"
+        className="contact-form"
+        onSubmit={handleSubmit}
+        noValidate
+      >
         <div className="contact-form__grid">
           <label className="form-field" htmlFor="contact-name">
             <span>Name</span>
@@ -111,6 +116,7 @@ function ContactSection() {
               value={values.name}
               aria-invalid={Boolean(errors.name)}
               aria-describedby={fieldError('name')}
+              aria-required="true"
               required
             />
             {errors.name && <span className="form-field__error" id="contact-name-error">{errors.name}</span>}
@@ -129,6 +135,7 @@ function ContactSection() {
               value={values.email}
               aria-invalid={Boolean(errors.email)}
               aria-describedby={fieldError('email')}
+              aria-required="true"
               required
             />
             {errors.email && <span className="form-field__error" id="contact-email-error">{errors.email}</span>}
@@ -145,6 +152,7 @@ function ContactSection() {
               value={values.subject}
               aria-invalid={Boolean(errors.subject)}
               aria-describedby={fieldError('subject')}
+              aria-required="true"
               required
             />
             {errors.subject && <span className="form-field__error" id="contact-subject-error">{errors.subject}</span>}
@@ -162,6 +170,7 @@ function ContactSection() {
               value={values.message}
               aria-invalid={Boolean(errors.message)}
               aria-describedby={fieldError('message')}
+              aria-required="true"
               required
             />
             {errors.message && <span className="form-field__error" id="contact-message-error">{errors.message}</span>}

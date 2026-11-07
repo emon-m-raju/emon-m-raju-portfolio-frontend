@@ -76,11 +76,12 @@
   font: inherit;
 }
 
-.owner-profile-field input:focus,
-.owner-profile-field textarea:focus,
+.owner-profile-field input:focus-visible,
+.owner-profile-field textarea:focus-visible,
 .owner-profile-resume input[type='file']:focus-visible {
   border-color: var(--accent);
-  outline: 2px solid rgb(101 230 180 / 15%);
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
 }
 
 .owner-profile-field input[aria-invalid='true'],
