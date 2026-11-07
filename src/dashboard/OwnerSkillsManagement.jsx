@@ -6,7 +6,8 @@ import {
   getOwnerSkills,
   updateOwnerSkill,
 } from '../api/axiosClient.js'
-import { ApiError } from '../api/client.js'
+import { formatResourceError } from '../api/errorFormatters.js'
+import { queryKeys } from '../api/queryKeys.js'
 import { useOwnerAuth } from '../auth/OwnerAuthContext.jsx'
 import './owner-skills.css'
 
@@ -53,22 +54,17 @@ function skillPayload(values) {
 }
 
 function getErrorMessage(error) {
-  if (error instanceof ApiError && error.status === 401) {
-    return 'Your owner session has expired. Sign in again to continue.'
-  }
-  if (error instanceof ApiError && error.status === 403) {
-    return 'The API denied this action. Only the portfolio owner can manage skills.'
-  }
-  if (error instanceof ApiError && error.status === 429) {
-    return 'The API is rate-limiting requests. Wait a moment and try again.'
-  }
-  return error?.message || 'The request could not be completed.'
+  return formatResourceError(
+    error,
+    'skills',
+    'The API denied this action. Only the portfolio owner can manage skills.',
+  )
 }
 
 function OwnerSkillsManagement() {
   const { auth } = useOwnerAuth()
   const queryClient = useQueryClient()
-  const skillsQueryKey = ['owner-skills', auth?.user?.id]
+  const skillsQueryKey = queryKeys.ownerSkills(auth?.user?.id)
   const [formValues, setFormValues] = useState(emptyForm)
   const [editingSkill, setEditingSkill] = useState(null)
   const [pendingDelete, setPendingDelete] = useState(null)

@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { getOwnerMessages, setOwnerMessageReadState } from '../api/axiosClient.js'
-import { ApiError } from '../api/client.js'
+import { formatResourceError } from '../api/errorFormatters.js'
+import { queryKeys } from '../api/queryKeys.js'
 import { useOwnerAuth } from '../auth/OwnerAuthContext.jsx'
 import './owner-messages.css'
 
@@ -12,16 +13,7 @@ const filters = [
 ]
 
 function getErrorMessage(error, resource = 'messages') {
-  if (error instanceof ApiError && error.status === 401) {
-    return 'Your owner session has expired. Sign in again to continue.'
-  }
-  if (error instanceof ApiError && error.status === 403) {
-    return `The API denied access. Only the portfolio owner can manage ${resource}.`
-  }
-  if (error instanceof ApiError && error.status === 429) {
-    return 'The API is rate-limiting requests. Wait a moment and try again.'
-  }
-  return error?.message || `The ${resource} request could not be completed.`
+  return formatResourceError(error, resource)
 }
 
 function formatDate(value) {
@@ -45,7 +37,7 @@ function OwnerMessagesManagement() {
   const [status, setStatus] = useState('all')
   const [selectedMessage, setSelectedMessage] = useState(null)
   const [feedback, setFeedback] = useState(null)
-  const messagesQueryKey = ['owner-messages', ownerId, page, status]
+  const messagesQueryKey = queryKeys.ownerMessages(ownerId, page, status)
 
   const messagesQuery = useQuery({
     queryKey: messagesQueryKey,
@@ -73,7 +65,7 @@ function OwnerMessagesManagement() {
         type: 'success',
         message: isRead ? 'Message marked as read.' : 'Message marked as unread.',
       })
-      await queryClient.invalidateQueries({ queryKey: ['owner-messages', ownerId] })
+      await queryClient.invalidateQueries({ queryKey: queryKeys.ownerMessages(ownerId) })
     },
     onError: (error) => setFeedback({ type: 'error', message: getErrorMessage(error, 'message') }),
   })

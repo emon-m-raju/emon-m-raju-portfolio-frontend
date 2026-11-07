@@ -6,7 +6,8 @@ import {
   replyToOwnerComment,
   setOwnerCommentApproval,
 } from '../api/axiosClient.js'
-import { ApiError } from '../api/client.js'
+import { formatResourceError } from '../api/errorFormatters.js'
+import { queryKeys } from '../api/queryKeys.js'
 import { useOwnerAuth } from '../auth/OwnerAuthContext.jsx'
 import './owner-comments.css'
 
@@ -17,16 +18,7 @@ const filters = [
 ]
 
 function getErrorMessage(error, resource = 'comments') {
-  if (error instanceof ApiError && error.status === 401) {
-    return 'Your owner session has expired. Sign in again to continue.'
-  }
-  if (error instanceof ApiError && error.status === 403) {
-    return `The API denied access. Only the portfolio owner can manage ${resource}.`
-  }
-  if (error instanceof ApiError && error.status === 429) {
-    return 'The API is rate-limiting requests. Wait a moment and try again.'
-  }
-  return error?.message || `The ${resource} request could not be completed.`
+  return formatResourceError(error, resource)
 }
 
 function formatDate(value) {
@@ -114,7 +106,7 @@ function OwnerCommentsManagement() {
   const [replyingTo, setReplyingTo] = useState(null)
   const [replyDraft, setReplyDraft] = useState({ name: '', email: '', content: '' })
   const [feedback, setFeedback] = useState(null)
-  const commentsQueryKey = ['owner-comments', ownerId, page, status]
+  const commentsQueryKey = queryKeys.ownerComments(ownerId, page, status)
 
   const commentsQuery = useQuery({
     queryKey: commentsQueryKey,
@@ -122,14 +114,14 @@ function OwnerCommentsManagement() {
     enabled: Boolean(auth?.accessToken),
   })
   const postTitlesQuery = useQuery({
-    queryKey: ['owner-comment-post-titles', ownerId],
+    queryKey: queryKeys.ownerCommentPostTitles(ownerId),
     queryFn: ({ signal }) => getOwnerPostTitles(auth.accessToken, { signal }),
     enabled: Boolean(auth?.accessToken && commentsQuery.data),
     staleTime: 60_000,
   })
 
   const refreshComments = () =>
-    queryClient.invalidateQueries({ queryKey: ['owner-comments', ownerId] })
+    queryClient.invalidateQueries({ queryKey: queryKeys.ownerComments(ownerId) })
 
   const approvalMutation = useMutation({
     mutationFn: ({ comment, isApproved }) =>

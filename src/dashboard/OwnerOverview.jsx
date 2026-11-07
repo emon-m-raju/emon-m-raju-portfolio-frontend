@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query'
 import { useNavigate } from 'react-router-dom'
 import { getOwnerDashboardStats } from '../api/axiosClient.js'
 import { ApiError } from '../api/client.js'
+import { queryKeys } from '../api/queryKeys.js'
 import { useOwnerAuth } from '../auth/OwnerAuthContext.jsx'
 
 const statistics = [
@@ -27,7 +28,7 @@ function OwnerOverview() {
   const { auth, clearAuth } = useOwnerAuth()
   const navigate = useNavigate()
   const statsQuery = useQuery({
-    queryKey: ['owner-dashboard-stats'],
+    queryKey: queryKeys.ownerDashboardStats(),
     queryFn: ({ signal }) => getOwnerDashboardStats(auth.accessToken, { signal }),
     staleTime: 30_000,
   })

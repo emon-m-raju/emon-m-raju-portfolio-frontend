@@ -3,13 +3,14 @@ import { useQuery } from '@tanstack/react-query'
 import { Navigate, Outlet, useLocation } from 'react-router-dom'
 import { getOwnerSession } from '../api/axiosClient.js'
 import { ApiError } from '../api/client.js'
+import { queryKeys } from '../api/queryKeys.js'
 import { useOwnerAuth } from '../auth/OwnerAuthContext.jsx'
 
 function OwnerRoute() {
   const { auth, clearAuth, isRestoring, restoreError, retryRestore } = useOwnerAuth()
   const location = useLocation()
   const verification = useQuery({
-    queryKey: ['owner-verification', auth?.accessToken],
+    queryKey: queryKeys.ownerVerification(auth?.accessToken),
     queryFn: ({ signal }) => getOwnerSession(auth.accessToken, { signal }),
     enabled: Boolean(auth?.accessToken),
     retry: false,

@@ -7,7 +7,8 @@ import {
   getOwnerSkills,
   updateOwnerProject,
 } from '../api/axiosClient.js'
-import { ApiError } from '../api/client.js'
+import { formatResourceError } from '../api/errorFormatters.js'
+import { queryKeys } from '../api/queryKeys.js'
 import { useOwnerAuth } from '../auth/OwnerAuthContext.jsx'
 import './owner-projects.css'
 
@@ -86,24 +87,15 @@ function projectPayload(values) {
 }
 
 function apiErrorMessage(error, resource = 'projects') {
-  if (error instanceof ApiError && error.status === 401) {
-    return 'Your owner session has expired. Sign in again to continue.'
-  }
-  if (error instanceof ApiError && error.status === 403) {
-    return `The API denied access. Only the portfolio owner can manage ${resource}.`
-  }
-  if (error instanceof ApiError && error.status === 429) {
-    return 'The API is rate-limiting requests. Wait a moment and try again.'
-  }
-  return error?.message || `The ${resource} request could not be completed.`
+  return formatResourceError(error, resource)
 }
 
 function OwnerProjectsManagement() {
   const { auth } = useOwnerAuth()
   const queryClient = useQueryClient()
   const ownerId = auth?.user?.id
-  const projectsQueryKey = ['owner-projects', ownerId]
-  const skillsQueryKey = ['owner-skills', ownerId]
+  const projectsQueryKey = queryKeys.ownerProjects(ownerId)
+  const skillsQueryKey = queryKeys.ownerSkills(ownerId)
   const [values, setValues] = useState(emptyForm)
   const [editingProject, setEditingProject] = useState(null)
   const [pendingDelete, setPendingDelete] = useState(null)

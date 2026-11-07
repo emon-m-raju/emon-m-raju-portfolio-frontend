@@ -1,11 +1,12 @@
 import { useEffect, useRef, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { getOwnerProfile, patchOwnerProfile } from '../api/axiosClient.js'
-import { ApiError } from '../api/client.js'
+import { formatResourceError } from '../api/errorFormatters.js'
+import { queryKeys } from '../api/queryKeys.js'
 import { useOwnerAuth } from '../auth/OwnerAuthContext.jsx'
 import './owner-profile.css'
 
-const profileQueryKey = ['owner-profile']
+const profileQueryKey = queryKeys.ownerProfile()
 const textFields = [
   { name: 'full_name', label: 'Full name', required: true, maxLength: 160 },
   { name: 'headline', label: 'Headline', required: true, maxLength: 200 },
@@ -60,16 +61,11 @@ function validate(values) {
 }
 
 function getProfileErrorMessage(error) {
-  if (error instanceof ApiError && error.status === 401) {
-    return 'Your owner session has expired. Sign in again to continue.'
-  }
-  if (error instanceof ApiError && error.status === 403) {
-    return 'The API denied access. Only the portfolio owner can view or update this profile.'
-  }
-  if (error instanceof ApiError && error.status === 429) {
-    return 'The API is rate-limiting requests. Wait a moment and try again.'
-  }
-  return error?.message || 'The profile could not be loaded.'
+  return formatResourceError(
+    error,
+    'profile',
+    'The API denied access. Only the portfolio owner can view or update this profile.',
+  )
 }
 
 function OwnerProfileManagement() {

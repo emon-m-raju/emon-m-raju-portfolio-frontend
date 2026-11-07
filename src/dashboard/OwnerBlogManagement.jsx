@@ -8,7 +8,8 @@ import {
   getOwnerTags,
   updateOwnerPost,
 } from '../api/axiosClient.js'
-import { ApiError } from '../api/client.js'
+import { formatResourceError } from '../api/errorFormatters.js'
+import { queryKeys } from '../api/queryKeys.js'
 import { useOwnerAuth } from '../auth/OwnerAuthContext.jsx'
 import './owner-blog.css'
 
@@ -24,16 +25,7 @@ const emptyPost = {
 }
 
 function getErrorMessage(error, resource = 'blog data') {
-  if (error instanceof ApiError && error.status === 401) {
-    return 'Your owner session has expired. Sign in again to continue.'
-  }
-  if (error instanceof ApiError && error.status === 403) {
-    return `The API denied access. Only the portfolio owner can manage ${resource}.`
-  }
-  if (error instanceof ApiError && error.status === 429) {
-    return 'The API is rate-limiting requests. Wait a moment and try again.'
-  }
-  return error?.message || `The ${resource} request could not be completed.`
+  return formatResourceError(error, resource)
 }
 
 function validatePost(post) {
@@ -101,26 +93,26 @@ function OwnerBlogManagement() {
   const [fieldErrors, setFieldErrors] = useState({})
   const [feedback, setFeedback] = useState(null)
 
-  const postsQueryKey = ['owner-posts', ownerId, page, search, status]
+  const postsQueryKey = queryKeys.ownerPosts(ownerId, page, search, status)
   const postsQuery = useQuery({
     queryKey: postsQueryKey,
     queryFn: ({ signal }) => getOwnerPosts(auth.accessToken, { page, search, status, signal }),
     enabled: Boolean(auth?.accessToken),
   })
   const categoriesQuery = useQuery({
-    queryKey: ['owner-categories', ownerId],
+    queryKey: queryKeys.ownerCategories(ownerId),
     queryFn: ({ signal }) => getOwnerCategories(auth.accessToken, { signal }),
     enabled: Boolean(auth?.accessToken),
   })
   const tagsQuery = useQuery({
-    queryKey: ['owner-tags', ownerId],
+    queryKey: queryKeys.ownerTags(ownerId),
     queryFn: ({ signal }) => getOwnerTags(auth.accessToken, { signal }),
     enabled: Boolean(auth?.accessToken),
   })
 
-  const refreshPosts = () => queryClient.invalidateQueries({ queryKey: ['owner-posts', ownerId] })
-  const refreshCategories = () => queryClient.invalidateQueries({ queryKey: ['owner-categories', ownerId] })
-  const refreshTags = () => queryClient.invalidateQueries({ queryKey: ['owner-tags', ownerId] })
+  const refreshPosts = () => queryClient.invalidateQueries({ queryKey: queryKeys.ownerPosts(ownerId) })
+  const refreshCategories = () => queryClient.invalidateQueries({ queryKey: queryKeys.ownerCategories(ownerId) })
+  const refreshTags = () => queryClient.invalidateQueries({ queryKey: queryKeys.ownerTags(ownerId) })
 
   const createMutation = useMutation({
     mutationFn: (post) => createOwnerPost(auth.accessToken, post),

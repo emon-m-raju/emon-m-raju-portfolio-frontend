@@ -1,5 +1,6 @@
 import axios from 'axios'
 import { ApiError } from './client.js'
+import { formatApiErrorResponse } from './errorFormatters.js'
 
 function getApiBaseUrl() {
   const value = import.meta.env.VITE_API_BASE_URL
@@ -133,24 +134,6 @@ apiClient.interceptors.request.use((request) => {
   return request
 })
 
-function getApiErrorMessage(data, fallback) {
-  if (typeof data?.detail === 'string') {
-    return data.detail
-  }
-
-  if (data && typeof data === 'object') {
-    const messages = Object.entries(data).flatMap(([field, value]) => {
-      const entries = Array.isArray(value) ? value : [value]
-      return entries.map((entry) => `${field}: ${String(entry)}`)
-    })
-    if (messages.length) {
-      return messages.join('; ')
-    }
-  }
-
-  return fallback
-}
-
 function toApiError(error) {
   if (axios.isCancel(error)) {
     return error
@@ -160,7 +143,7 @@ function toApiError(error) {
   }
 
   const status = error.response?.status
-  const message = getApiErrorMessage(
+  const message = formatApiErrorResponse(
     error.response?.data,
     status
       ? `API request failed with status ${status}.`
@@ -432,7 +415,7 @@ export async function getOwnerProfile(accessToken, { signal } = {}) {
     }
     if (axios.isAxiosError(error)) {
       const status = error.response?.status
-      const message = getApiErrorMessage(
+      const message = formatApiErrorResponse(
         error.response?.data,
         status
           ? `API request failed with status ${status}.`
@@ -965,7 +948,7 @@ export async function patchOwnerProfile(accessToken, values, resumeFile, { signa
     }
     if (axios.isAxiosError(error)) {
       const status = error.response?.status
-      const message = getApiErrorMessage(
+      const message = formatApiErrorResponse(
         error.response?.data,
         status
           ? `API request failed with status ${status}.`

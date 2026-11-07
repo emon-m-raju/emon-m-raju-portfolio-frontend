@@ -7,6 +7,7 @@ import {
   getProjects,
   getSkills,
 } from '../api/portfolio.js'
+import { queryKeys } from '../api/queryKeys.js'
 
 function toResource(query, key) {
   if (query.isPending) {
@@ -33,27 +34,27 @@ function toResource(query, key) {
 
 export function usePortfolioData() {
   const profile = useQuery({
-    queryKey: ['public-profile'],
+    queryKey: queryKeys.publicProfile(),
     queryFn: ({ signal }) => getProfile({ signal }),
   })
   const skills = useQuery({
-    queryKey: ['public-skills'],
+    queryKey: queryKeys.publicSkills(),
     queryFn: ({ signal }) => getSkills({ signal }),
   })
   const education = useQuery({
-    queryKey: ['public-education'],
+    queryKey: queryKeys.publicEducation(),
     queryFn: ({ signal }) => getEducation({ signal }),
   })
   const experiences = useQuery({
-    queryKey: ['public-experiences'],
+    queryKey: queryKeys.publicExperiences(),
     queryFn: ({ signal }) => getExperiences({ signal }),
   })
   const projects = useQuery({
-    queryKey: ['public-projects'],
+    queryKey: queryKeys.publicProjects(),
     queryFn: ({ signal }) => getProjects({ signal }),
   })
   const posts = useQuery({
-    queryKey: ['public-posts'],
+    queryKey: queryKeys.publicPosts(),
     queryFn: ({ signal }) => getPosts({ signal }),
   })
   return {

@@ -10,7 +10,8 @@ import {
   updateOwnerCategory,
   updateOwnerTag,
 } from '../api/axiosClient.js'
-import { ApiError } from '../api/client.js'
+import { formatResourceError } from '../api/errorFormatters.js'
+import { queryKeys } from '../api/queryKeys.js'
 import { useOwnerAuth } from '../auth/OwnerAuthContext.jsx'
 import './owner-blog.css'
 
@@ -18,30 +19,23 @@ const configs = {
   categories: {
     label: 'Category',
     plural: 'Categories',
-    queryName: 'owner-categories',
     maxName: 80,
     hasDescription: true,
   },
   tags: {
     label: 'Tag',
     plural: 'Tags',
-    queryName: 'owner-tags',
     maxName: 60,
     hasDescription: false,
   },
 }
 
 function messageFromError(error, label) {
-  if (error instanceof ApiError && error.status === 401) {
-    return 'Your owner session has expired. Sign in again to continue.'
-  }
-  if (error instanceof ApiError && error.status === 403) {
-    return `Only the portfolio owner can manage ${label.toLowerCase()}.`
-  }
-  if (error instanceof ApiError && error.status === 429) {
-    return 'The API is rate-limiting requests. Wait a moment and try again.'
-  }
-  return error?.message || `The ${label.toLowerCase()} request could not be completed.`
+  return formatResourceError(
+    error,
+    label.toLowerCase(),
+    `Only the portfolio owner can manage ${label.toLowerCase()}.`,
+  )
 }
 
 function emptyValues(config) {
@@ -52,7 +46,9 @@ function OwnerTaxonomyManagement({ resource }) {
   const config = configs[resource]
   const { auth } = useOwnerAuth()
   const queryClient = useQueryClient()
-  const queryKey = [config.queryName, auth?.user?.id]
+  const queryKey = resource === 'categories'
+    ? queryKeys.ownerCategories(auth?.user?.id)
+    : queryKeys.ownerTags(auth?.user?.id)
   const [values, setValues] = useState(emptyValues(config))
   const [editingItem, setEditingItem] = useState(null)
   const [pendingDelete, setPendingDelete] = useState(null)
@@ -94,7 +90,7 @@ function OwnerTaxonomyManagement({ resource }) {
       setFeedback({ type: 'success', message: `${config.label} “${updatedItem.name}” updated.` })
       await Promise.all([
         queryClient.invalidateQueries({ queryKey }),
-        queryClient.invalidateQueries({ queryKey: ['owner-posts', auth?.user?.id] }),
+        queryClient.invalidateQueries({ queryKey: queryKeys.ownerPosts(auth?.user?.id) }),
       ])
     },
     onError: (error) => setFeedback({ type: 'error', message: messageFromError(error, config.plural) }),
@@ -111,7 +107,7 @@ function OwnerTaxonomyManagement({ resource }) {
       setFeedback({ type: 'success', message: `${config.label} “${deletedItem.name}” deleted.` })
       await Promise.all([
         queryClient.invalidateQueries({ queryKey }),
-        queryClient.invalidateQueries({ queryKey: ['owner-posts', auth?.user?.id] }),
+        queryClient.invalidateQueries({ queryKey: queryKeys.ownerPosts(auth?.user?.id) }),
       ])
     },
     onError: (error) => setFeedback({ type: 'error', message: messageFromError(error, config.plural) }),

@@ -1,5 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { likePost, getStoredPostLike, setStoredPostLike } from '../api/axiosClient.js'
+import { queryKeys } from '../api/queryKeys.js'
 import BlogPostCard from '../components/BlogPostCard.jsx'
 import ResourceState from '../components/ResourceState.jsx'
 import SectionHeading from '../components/SectionHeading.jsx'
@@ -13,14 +14,15 @@ function BlogSection({ postsResource }) {
   const likeMutation = useMutation({
     mutationFn: ({ slug }) => likePost(slug),
     onMutate: async ({ slug }) => {
-      await queryClient.cancelQueries({ queryKey: ['public-posts'] })
-      const previousPosts = queryClient.getQueryData(['public-posts'])
+      const postsQueryKey = queryKeys.publicPosts()
+      await queryClient.cancelQueries({ queryKey: postsQueryKey })
+      const previousPosts = queryClient.getQueryData(postsQueryKey)
       const currentPost = previousPosts?.find((post) => post.slug === slug)
       const wasLiked = currentPost?.liked ?? getStoredPostLike(slug)
       const liked = !wasLiked
 
       setStoredPostLike(slug, liked)
-      queryClient.setQueryData(['public-posts'], (posts) =>
+      queryClient.setQueryData(postsQueryKey, (posts) =>
         Array.isArray(posts)
           ? posts.map((post) =>
               post.slug === slug
@@ -40,7 +42,7 @@ function BlogSection({ postsResource }) {
     },
     onError: (_error, _variables, context) => {
       if (context?.previousPosts) {
-        queryClient.setQueryData(['public-posts'], context.previousPosts)
+        queryClient.setQueryData(queryKeys.publicPosts(), context.previousPosts)
       }
       if (context) {
         setStoredPostLike(context.slug, context.wasLiked)
@@ -48,7 +50,7 @@ function BlogSection({ postsResource }) {
     },
     onSuccess: (result, { slug }) => {
       setStoredPostLike(slug, result.liked)
-      queryClient.setQueryData(['public-posts'], (posts) =>
+      queryClient.setQueryData(queryKeys.publicPosts(), (posts) =>
         Array.isArray(posts)
           ? posts.map((post) =>
               post.slug === slug
@@ -58,7 +60,7 @@ function BlogSection({ postsResource }) {
           : posts,
       )
     },
-    onSettled: () => queryClient.invalidateQueries({ queryKey: ['public-posts'] }),
+    onSettled: () => queryClient.invalidateQueries({ queryKey: queryKeys.publicPosts() }),
   })
 
   const posts =
