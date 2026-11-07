@@ -142,6 +142,21 @@
   box-shadow: 0 1.5rem 5rem rgb(0 0 0 / 12%);
 }
 
+.panel,
+.site-header,
+.site-navigation,
+.theme-toggle,
+.project-card,
+.blog-card,
+.skill-group,
+.education-card,
+.experience-card {
+  transition:
+    background-color 180ms ease,
+    border-color 180ms ease,
+    color 180ms ease;
+}
+
 .welcome {
   position: relative;
   overflow: hidden;
@@ -1059,13 +1074,21 @@
 @media (max-width: 640px) {
   .site-header__inner,
   .site-footer__inner {
-    width: min(100% - 2rem, 76rem);
+    width: min(100% - 1.5rem, 76rem);
   }
 
   .page-content {
-    width: min(100% - 2rem, 68rem);
-    padding: 2rem 0;
+    width: min(100% - 1.5rem, 68rem);
+    padding: 1.5rem 0;
     gap: 1rem;
+  }
+
+  .portfolio-section {
+    padding: clamp(1.15rem, 5vw, 1.5rem);
+  }
+
+  .panel {
+    border-radius: 0.75rem;
   }
 
   .home-section {
@@ -1097,6 +1120,16 @@
 
   .resource-list__item {
     padding: 0.75rem;
+  }
+
+  .site-footer__inner {
+    min-height: 3.5rem;
+    flex-wrap: wrap;
+    padding: 0.75rem 0;
+  }
+
+  .site-footer__inner a {
+    margin-left: 0;
   }
 }
 

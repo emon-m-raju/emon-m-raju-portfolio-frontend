@@ -21,6 +21,7 @@
   background: var(--page);
   color: var(--text);
   scroll-behavior: smooth;
+  transition: background-color 180ms ease, color 180ms ease;
 }
 
 :root[data-theme='light'] {
