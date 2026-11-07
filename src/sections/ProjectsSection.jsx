@@ -78,7 +78,9 @@ function ProjectsSection({ projectsResource, skillsResource }) {
       <ResourceState
         status={projectsResource?.status ?? 'error'}
         error={projectsResource?.error ?? 'Project data is unavailable.'}
+        loadingVariant="projects"
         onRetry={projectsResource?.retry}
+        emptyTitle="No projects yet"
         emptyMessage="No projects have been added yet."
       >
         {projects.length > 0 ? (
@@ -135,10 +137,6 @@ function ProjectsSection({ projectsResource, skillsResource }) {
             )
           })}
           </div>
-        ) : projectsResource?.status === 'success' ? (
-          <p className="resource-state resource-state--empty">
-            No projects have been added yet.
-          </p>
         ) : null}
       </ResourceState>
     </section>

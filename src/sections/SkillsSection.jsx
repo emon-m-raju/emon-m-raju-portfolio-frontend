@@ -40,7 +40,9 @@ function SkillsSection({ skillsResource }) {
       <ResourceState
         status={skillsResource?.status ?? 'error'}
         error={skillsResource?.error ?? 'Skills data is unavailable.'}
+        loadingVariant="skills"
         onRetry={skillsResource?.retry}
+        emptyTitle="No skills yet"
         emptyMessage="No skills have been added yet."
       >
         <div className="skill-groups">
