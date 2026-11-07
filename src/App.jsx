@@ -18,6 +18,7 @@ import { usePortfolioData } from './hooks/usePortfolioData.js'
 import { useTheme } from './hooks/useTheme.js'
 import SiteFooter from './components/SiteFooter.jsx'
 import SiteHeader from './components/SiteHeader.jsx'
+import NotFoundPage from './components/NotFoundPage.jsx'
 import AboutSection from './sections/AboutSection.jsx'
 import BlogSection from './sections/BlogSection.jsx'
 import ContactSection from './sections/ContactSection.jsx'
@@ -192,7 +193,10 @@ function App() {
             <Route path="messages" element={<OwnerMessagesManagement />} />
           </Route>
         </Route>
-        <Route path="*" element={<Navigate to="/" replace />} />
+        <Route
+          path="*"
+          element={<NotFoundPage onToggleTheme={toggleTheme} theme={theme} />}
+        />
       </Routes>
     </OwnerAuthContext.Provider>
   )
