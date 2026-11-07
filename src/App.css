@@ -36,6 +36,14 @@
   cursor: pointer;
 }
 
+.route-loading {
+  min-height: 100vh;
+  padding: 2rem;
+  display: grid;
+  place-items: center;
+  color: var(--muted);
+}
+
 .not-found-page {
   width: min(100% - 2.5rem, 68rem);
   min-height: 100vh;

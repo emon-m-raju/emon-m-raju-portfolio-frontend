@@ -1,18 +1,17 @@
-import { useCallback, useEffect, useState } from 'react'
+import { lazy, Suspense, useCallback, useEffect, useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom'
 import { OwnerAuthContext } from './auth/OwnerAuthContext.jsx'
 import { clearStoredOwnerTokens, restoreOwnerSession } from './api/axiosClient.js'
-import OwnerLayout from './dashboard/OwnerLayout.jsx'
-import OwnerManagementPlaceholder from './dashboard/OwnerManagementPlaceholder.jsx'
-import OwnerOverview from './dashboard/OwnerOverview.jsx'
-import OwnerBlogManagement from './dashboard/OwnerBlogManagement.jsx'
-import OwnerProfileManagement from './dashboard/OwnerProfileManagement.jsx'
-import OwnerProjectsManagement from './dashboard/OwnerProjectsManagement.jsx'
-import OwnerCommentsManagement from './dashboard/OwnerCommentsManagement.jsx'
-import OwnerMessagesManagement from './dashboard/OwnerMessagesManagement.jsx'
-import OwnerSkillsManagement from './dashboard/OwnerSkillsManagement.jsx'
-import OwnerTaxonomyManagement from './dashboard/OwnerTaxonomyManagement.jsx'
+const OwnerLayout = lazy(() => import('./dashboard/OwnerLayout.jsx'))
+const OwnerOverview = lazy(() => import('./dashboard/OwnerOverview.jsx'))
+const OwnerBlogManagement = lazy(() => import('./dashboard/OwnerBlogManagement.jsx'))
+const OwnerProfileManagement = lazy(() => import('./dashboard/OwnerProfileManagement.jsx'))
+const OwnerProjectsManagement = lazy(() => import('./dashboard/OwnerProjectsManagement.jsx'))
+const OwnerCommentsManagement = lazy(() => import('./dashboard/OwnerCommentsManagement.jsx'))
+const OwnerMessagesManagement = lazy(() => import('./dashboard/OwnerMessagesManagement.jsx'))
+const OwnerSkillsManagement = lazy(() => import('./dashboard/OwnerSkillsManagement.jsx'))
+const OwnerTaxonomyManagement = lazy(() => import('./dashboard/OwnerTaxonomyManagement.jsx'))
 import OwnerRoute from './dashboard/OwnerRoute.jsx'
 import { usePortfolioData } from './hooks/usePortfolioData.js'
 import { useTheme } from './hooks/useTheme.js'
@@ -179,7 +178,11 @@ function App() {
         <Route element={<OwnerRoute />}>
           <Route
             path="/owner"
-            element={<OwnerLayout theme={theme} onToggleTheme={toggleTheme} />}
+            element={
+              <Suspense fallback={<div className="route-loading" role="status">Loading dashboard…</div>}>
+                <OwnerLayout onToggleTheme={toggleTheme} theme={theme} />
+              </Suspense>
+            }
           >
             <Route index element={<OwnerOverview />} />
             <Route path="profile" element={<OwnerProfileManagement />} />
