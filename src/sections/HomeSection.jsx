@@ -1,3 +1,5 @@
+const FALLBACK_PROFILE_IMAGE = '/profile.jpg'
+
 /**
  * Renders the introductory hero from the public profile resource.
  * @param {{ profileResource: { status: string, data?: object } }} props
@@ -18,9 +20,31 @@ function HomeSection({ profileResource }) {
   const biography = typeof profile?.bio === 'string' && profile.bio.trim()
     ? profile.bio
     : ''
+  const avatar = [profile?.avatar, profile?.image].find(
+    (value) => typeof value === 'string' && value.trim(),
+  )?.trim()
+  const avatarPath = avatar?.split(/[?#]/, 1)[0] ?? ''
+  const isDefaultAvatar = /(?:^|\/)(?:default|default-avatar|placeholder)(?:\.(?:jpe?g|png|webp))?$/i
+    .test(avatarPath)
+  const avatarSrc = avatar && !isDefaultAvatar ? avatar : FALLBACK_PROFILE_IMAGE
 
   return (
     <section className="home-section panel" id="home" aria-labelledby="home-title">
+      <div className="home-section__visual">
+        <img
+          alt={`${name} profile`}
+          className="home-section__avatar"
+          onError={(event) => {
+            const image = event.currentTarget
+            if (image.getAttribute('src') === FALLBACK_PROFILE_IMAGE) {
+              image.hidden = true
+            } else {
+              image.src = FALLBACK_PROFILE_IMAGE
+            }
+          }}
+          src={avatarSrc}
+        />
+      </div>
       <div className="home-section__content">
         <p className="welcome__eyebrow">PERSONAL PORTFOLIO</p>
         <p className="home-section__terminal-line">
@@ -48,10 +72,6 @@ function HomeSection({ profileResource }) {
             </a>
           )}
         </div>
-      </div>
-      <div className="home-section__prompt" aria-hidden="true">
-        <span>~/portfolio</span>
-        <span className="home-section__prompt-line">ready<span>_</span></span>
       </div>
     </section>
   )
