@@ -1,7 +1,8 @@
-import { useCallback, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom'
 import { OwnerAuthContext } from './auth/OwnerAuthContext.jsx'
+import { clearStoredOwnerTokens, restoreOwnerSession } from './api/axiosClient.js'
 import OwnerLayout from './dashboard/OwnerLayout.jsx'
 import OwnerManagementPlaceholder from './dashboard/OwnerManagementPlaceholder.jsx'
 import OwnerOverview from './dashboard/OwnerOverview.jsx'
@@ -105,23 +106,49 @@ function LoginPage({ auth, onLoginSuccess, onLogout }) {
 }
 
 function App() {
-  const [auth, setAuth] = useState(null)
+  const [auth, setAuth] = useState(undefined)
+  const [restoreError, setRestoreError] = useState('')
   const { theme, toggleTheme } = useTheme()
   const queryClient = useQueryClient()
   const navigate = useNavigate()
 
+  const restoreSession = useCallback(async () => {
+    setAuth(undefined)
+    setRestoreError('')
+    try {
+      const restoredAuth = await restoreOwnerSession()
+      setAuth(restoredAuth)
+    } catch (error) {
+      setAuth(null)
+      setRestoreError(error.message || 'Could not restore the owner session.')
+    }
+  }, [])
+
+  useEffect(() => {
+    void restoreSession()
+  }, [restoreSession])
+
   const clearAuth = useCallback(() => {
+    clearStoredOwnerTokens()
     queryClient.clear()
     setAuth(null)
+    setRestoreError('')
   }, [queryClient])
 
   const handleLoginSuccess = useCallback((ownerAuth, destination = '/owner') => {
     queryClient.clear()
     setAuth(ownerAuth)
+    setRestoreError('')
     navigate(destination, { replace: true })
   }, [navigate, queryClient])
 
-  const ownerAuth = { auth, clearAuth }
+  const ownerAuth = {
+    auth,
+    clearAuth,
+    isRestoring: auth === undefined,
+    restoreError,
+    retryRestore: () => restoreSession(),
+  }
 
   return (
     <OwnerAuthContext.Provider value={ownerAuth}>

@@ -125,7 +125,7 @@ function LoginSection({ auth, onLoginSuccess, onLogout }) {
         </p>
       )}
       <p className="auth-section__security">
-        Access and refresh tokens are kept in memory only and are cleared when this page is reloaded.
+        Owner access and refresh tokens are stored in this browser to restore your session after reload.
       </p>
     </section>
   )

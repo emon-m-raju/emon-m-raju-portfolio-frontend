@@ -6,7 +6,7 @@ import { ApiError } from '../api/client.js'
 import { useOwnerAuth } from '../auth/OwnerAuthContext.jsx'
 
 function OwnerRoute() {
-  const { auth, clearAuth } = useOwnerAuth()
+  const { auth, clearAuth, isRestoring, restoreError, retryRestore } = useOwnerAuth()
   const location = useLocation()
   const verification = useQuery({
     queryKey: ['owner-verification', auth?.accessToken],
@@ -25,6 +25,28 @@ function OwnerRoute() {
       clearAuth()
     }
   }, [clearAuth, invalidSession])
+
+  if (isRestoring) {
+    return (
+      <main className="owner-gate">
+        <p role="status">Restoring owner session…</p>
+      </main>
+    )
+  }
+
+  if (restoreError) {
+    return (
+      <main className="owner-gate">
+        <div className="owner-notice owner-notice--error" role="alert">
+          <strong>Could not restore owner access.</strong>
+          <p>{restoreError}</p>
+          <button className="owner-button" onClick={retryRestore} type="button">
+            Retry session restoration
+          </button>
+        </div>
+      </main>
+    )
+  }
 
   if (!auth?.accessToken) {
     return <Navigate to="/login" replace state={{ from: location }} />

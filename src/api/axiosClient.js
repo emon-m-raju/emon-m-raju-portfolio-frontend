@@ -33,6 +33,106 @@ export const apiClient = axios.create({
   timeout: 15_000,
 })
 
+const ACCESS_TOKEN_KEY = 'devfolio-owner-access-token'
+const REFRESH_TOKEN_KEY = 'devfolio-owner-refresh-token'
+const VISITOR_ID_KEY = 'devfolio-visitor-id'
+const LIKE_STORAGE_PREFIX = 'devfolio-liked-post:'
+let fallbackVisitorId
+let ownerSessionRestorePromise
+
+function createVisitorId() {
+  if (globalThis.crypto?.randomUUID) {
+    return globalThis.crypto.randomUUID()
+  }
+
+  if (globalThis.crypto?.getRandomValues) {
+    const bytes = globalThis.crypto.getRandomValues(new Uint8Array(16))
+    bytes[6] = (bytes[6] & 0x0f) | 0x40
+    bytes[8] = (bytes[8] & 0x3f) | 0x80
+    const hex = [...bytes].map((byte) => byte.toString(16).padStart(2, '0')).join('')
+    return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`
+  }
+
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (character) => {
+    const random = Math.floor(Math.random() * 16)
+    return (character === 'x' ? random : (random & 0x3) | 0x8).toString(16)
+  })
+}
+
+export function getVisitorId() {
+  try {
+    const existingId = window.localStorage.getItem(VISITOR_ID_KEY)
+    if (
+      existingId &&
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(existingId)
+    ) {
+      return existingId
+    }
+
+    const visitorId = createVisitorId()
+    window.localStorage.setItem(VISITOR_ID_KEY, visitorId)
+    return visitorId
+  } catch {
+    fallbackVisitorId ??= createVisitorId()
+    return fallbackVisitorId
+  }
+}
+
+function getStoredAccessToken() {
+  try {
+    return window.localStorage.getItem(ACCESS_TOKEN_KEY)
+  } catch {
+    return null
+  }
+}
+
+function getStoredOwnerTokens() {
+  return {
+    accessToken: window.localStorage.getItem(ACCESS_TOKEN_KEY),
+    refreshToken: window.localStorage.getItem(REFRESH_TOKEN_KEY),
+  }
+}
+
+function storeOwnerTokens(accessToken, refreshToken) {
+  window.localStorage.setItem(ACCESS_TOKEN_KEY, accessToken)
+  window.localStorage.setItem(REFRESH_TOKEN_KEY, refreshToken)
+}
+
+export function clearStoredOwnerTokens() {
+  window.localStorage.removeItem(ACCESS_TOKEN_KEY)
+  window.localStorage.removeItem(REFRESH_TOKEN_KEY)
+}
+
+export function getStoredPostLike(slug) {
+  try {
+    return window.localStorage.getItem(`${LIKE_STORAGE_PREFIX}${getVisitorId()}:${slug}`) === 'true'
+  } catch {
+    return false
+  }
+}
+
+export function setStoredPostLike(slug, liked) {
+  try {
+    window.localStorage.setItem(
+      `${LIKE_STORAGE_PREFIX}${getVisitorId()}:${slug}`,
+      String(Boolean(liked)),
+    )
+  } catch (error) {
+    console.warn('Could not persist this post like state in local storage.', error)
+  }
+}
+
+apiClient.interceptors.request.use((request) => {
+  request.headers.set('X-Visitor-Id', getVisitorId())
+  if (!request.headers.get('Authorization')) {
+    const accessToken = getStoredAccessToken()
+    if (accessToken) {
+      request.headers.set('Authorization', `Bearer ${accessToken}`)
+    }
+  }
+  return request
+})
+
 function getApiErrorMessage(data, fallback) {
   if (typeof data?.detail === 'string') {
     return data.detail
@@ -153,6 +253,7 @@ export async function loginOwner(credentials, { signal } = {}) {
       throw new Error('The login API returned an invalid token response.')
     }
 
+    storeOwnerTokens(tokens.access, tokens.refresh)
     const userResponse = await apiClient.get('auth/me/', {
       signal,
       headers: { Authorization: `Bearer ${tokens.access}` },
@@ -163,6 +264,7 @@ export async function loginOwner(credentials, { signal } = {}) {
     }
     return { accessToken: tokens.access, refreshToken: tokens.refresh, user }
   } catch (error) {
+    clearStoredOwnerTokens()
     const apiError = toApiError(error)
     if (apiError === error) throw error
     throw apiError
@@ -197,6 +299,103 @@ export async function getOwnerSession(accessToken, { signal } = {}) {
     return response.data
   } catch (error) {
     throw toApiError(error)
+  }
+}
+
+function isAuthenticationError(error) {
+  return error instanceof ApiError && [401, 403].includes(error.status)
+}
+
+async function refreshOwnerSession(refreshToken, signal) {
+  try {
+    const response = await apiClient.post(
+      'auth/refresh/',
+      { refresh: refreshToken },
+      { signal, headers: { 'Content-Type': 'application/json' } },
+    )
+    const tokens = response.data
+    if (!tokens || typeof tokens.access !== 'string') {
+      throw new Error('The token refresh API returned an invalid response.')
+    }
+
+    const updatedRefreshToken =
+      typeof tokens.refresh === 'string' ? tokens.refresh : refreshToken
+    storeOwnerTokens(tokens.access, updatedRefreshToken)
+    return { accessToken: tokens.access, refreshToken: updatedRefreshToken }
+  } catch (error) {
+    const apiError = toApiError(error)
+    if (apiError === error) throw error
+    throw apiError
+  }
+}
+
+async function restoreStoredOwnerSession() {
+  let tokens = getStoredOwnerTokens()
+  if (!tokens.accessToken && !tokens.refreshToken) {
+    return null
+  }
+
+  if (tokens.accessToken) {
+    try {
+      const response = await getOwnerSession(tokens.accessToken)
+      if (response && typeof response.username === 'string') {
+        return { ...tokens, user: response }
+      }
+      throw new Error('The owner verification API returned an invalid response.')
+    } catch (error) {
+      if (!isAuthenticationError(error)) {
+        throw error
+      }
+      if (!tokens.refreshToken) {
+        clearStoredOwnerTokens()
+        return null
+      }
+    }
+  }
+
+  try {
+    tokens = await refreshOwnerSession(tokens.refreshToken)
+    const user = await getOwnerSession(tokens.accessToken)
+    if (!user || typeof user.username !== 'string') {
+      throw new Error('The owner verification API returned an invalid response.')
+    }
+    return { ...tokens, user }
+  } catch (error) {
+    if (isAuthenticationError(error)) {
+      clearStoredOwnerTokens()
+      return null
+    }
+    throw error
+  }
+}
+
+export function restoreOwnerSession() {
+  if (!ownerSessionRestorePromise) {
+    ownerSessionRestorePromise = restoreStoredOwnerSession().finally(() => {
+      ownerSessionRestorePromise = null
+    })
+  }
+  return ownerSessionRestorePromise
+}
+
+export async function likePost(slug, { signal } = {}) {
+  try {
+    const response = await apiClient.post(
+      `posts/${encodeURIComponent(slug)}/like/`,
+      null,
+      { signal },
+    )
+    if (
+      typeof response.data?.liked !== 'boolean' ||
+      !Number.isFinite(response.data?.likes_count)
+    ) {
+      throw new Error('The post like API returned an invalid response.')
+    }
+    return response.data
+  } catch (error) {
+    const apiError = toApiError(error)
+    if (apiError === error) throw error
+    throw apiError
   }
 }
 
