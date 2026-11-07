@@ -9,6 +9,10 @@ function formatCategory(category) {
     .join(' ')
 }
 
+/**
+ * Groups the public skill collection by its API-provided category.
+ * @param {{ skillsResource: { status: string, data?: object[], error?: string, retry?: () => void } }} props
+ */
 function SkillsSection({ skillsResource }) {
   const skills =
     skillsResource?.status === 'success' && Array.isArray(skillsResource.data)

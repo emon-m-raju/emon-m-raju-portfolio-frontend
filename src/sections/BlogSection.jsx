@@ -4,6 +4,10 @@ import BlogPostCard from '../components/BlogPostCard.jsx'
 import ResourceState from '../components/ResourceState.jsx'
 import SectionHeading from '../components/SectionHeading.jsx'
 
+/**
+ * Displays published posts and applies optimistic updates to their like state.
+ * @param {{ postsResource: { status: string, data?: object[], error?: string, retry?: () => void } }} props
+ */
 function BlogSection({ postsResource }) {
   const queryClient = useQueryClient()
   const likeMutation = useMutation({

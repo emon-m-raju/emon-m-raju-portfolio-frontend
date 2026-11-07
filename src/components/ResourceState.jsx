@@ -1,3 +1,7 @@
+/**
+ * Presents the loading, error, empty, or successful state of an API resource.
+ * @param {{ status: 'loading'|'error'|'empty'|'success', error?: string, emptyMessage?: string, onRetry?: () => void, children?: import('react').ReactNode }} props
+ */
 function ResourceState({
   status,
   error,

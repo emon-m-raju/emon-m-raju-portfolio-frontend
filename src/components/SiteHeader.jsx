@@ -14,6 +14,10 @@ const navigationItems = [
   { label: 'Login', href: '#login' },
 ]
 
+/**
+ * Renders public section navigation and owner-aware links.
+ * @param {{ theme: 'light'|'dark', onToggleTheme: () => void, authenticatedUser?: { username: string }|null }} props
+ */
 function SiteHeader({ theme, onToggleTheme, authenticatedUser }) {
   const [menuOpen, setMenuOpen] = useState(false)
   const links = authenticatedUser

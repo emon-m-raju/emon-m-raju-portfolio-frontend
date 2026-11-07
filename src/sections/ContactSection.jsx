@@ -37,6 +37,7 @@ function validate(values) {
   return errors
 }
 
+/** Validates and submits a public contact message through the API. */
 function ContactSection() {
   const submitMutation = useMutation({ mutationFn: createContactMessage })
   const [values, setValues] = useState(initialValues)

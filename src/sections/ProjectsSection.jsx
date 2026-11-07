@@ -43,6 +43,10 @@ function getTechnologyNames(techStack, skillsById) {
     .filter((name) => typeof name === 'string' && name.length > 0)
 }
 
+/**
+ * Renders projects and resolves their technology references against skills.
+ * @param {{ projectsResource: { status: string, data?: object[], error?: string, retry?: () => void }, skillsResource: { status: string, data?: object[] } }} props
+ */
 function ProjectsSection({ projectsResource, skillsResource }) {
   const skillsById = new Map(
     skillsResource?.status === 'success' && Array.isArray(skillsResource.data)

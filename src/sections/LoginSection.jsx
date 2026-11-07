@@ -5,6 +5,10 @@ import { loginOwner, logoutOwner } from '../api/auth.js'
 import SectionHeading from '../components/SectionHeading.jsx'
 import { Link } from 'react-router-dom'
 
+/**
+ * Handles owner sign-in and sign-out using API-backed mutations.
+ * @param {{ auth: object|null, onLoginSuccess: (auth: object) => void, onLogout: () => void }} props
+ */
 function LoginSection({ auth, onLoginSuccess, onLogout }) {
   const loginMutation = useMutation({ mutationFn: loginOwner })
   const logoutMutation = useMutation({ mutationFn: logoutOwner })

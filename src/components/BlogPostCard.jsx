@@ -32,6 +32,10 @@ function getPreview(post) {
   return content.length > 220 ? `${content.slice(0, 220).trimEnd()}…` : content
 }
 
+/**
+ * Renders one API-backed post preview and its visitor like control.
+ * @param {{ post: object, onLike?: () => void, likePending?: boolean }} props
+ */
 function BlogPostCard({ post, onLike, likePending = false }) {
   if (!post || typeof post !== 'object' || Array.isArray(post)) {
     return null

@@ -1,3 +1,7 @@
+/**
+ * Switches the application between its persisted light and dark themes.
+ * @param {{ theme: 'light'|'dark', onToggle: () => void }} props
+ */
 function ThemeToggle({ theme, onToggle }) {
   const nextTheme = theme === 'dark' ? 'light' : 'dark'
 

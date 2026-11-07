@@ -1,3 +1,7 @@
+/**
+ * Renders the introductory hero from the public profile resource.
+ * @param {{ profileResource: { status: string, data?: object } }} props
+ */
 function HomeSection({ profileResource }) {
   const profile =
     profileResource?.status === 'success' &&

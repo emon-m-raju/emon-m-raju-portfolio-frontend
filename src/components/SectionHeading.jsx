@@ -1,3 +1,7 @@
+/**
+ * Renders consistent section titles, optionally using a different heading level.
+ * @param {{ eyebrow?: string, title: string, description?: string, as?: string, id?: string }} props
+ */
 function SectionHeading({ eyebrow, title, description, as: Heading = 'h2', id }) {
   return (
     <div className="section-heading">
